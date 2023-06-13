@@ -349,6 +349,12 @@ testCopyDocumentAndCollection(){
     assertEquals "Failed to copy document" "${expectedValue}" "${result}"
 }
 
+testAggregationQueryCount(){
+    ../fuego add ${TEST_COLLECTION} {}
+    ../fuego add ${TEST_COLLECTION} {}
+    result=$(../fuego query --count ${TEST_COLLECTION} | jq ".Count")
+    assertEquals "Failed to get aggregation count" "2" "$result"
+}
 
 # Load shUnit2.
 . ./shunit2

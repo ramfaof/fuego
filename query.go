@@ -2,6 +2,7 @@ package main
 
 import (
 	"cloud.google.com/go/firestore"
+	"cloud.google.com/go/firestore/apiv1/firestorepb"
 	"context"
 	"fmt"
 	"github.com/urfave/cli"
@@ -68,6 +69,7 @@ func queryCommandAction(c *cli.Context) error {
 	orderbyFields := c.StringSlice("orderby")
 	orderdirFields := c.StringSlice("orderdir")
 	limit := c.Int("limit")
+	count := c.Bool("count")
 
 	queryParser := getQueryParser()
 
@@ -166,6 +168,21 @@ func queryCommandAction(c *cli.Context) error {
 
 	displayItemWriter := newDisplayItemWriter(&c.App.Writer)
 	defer displayItemWriter.Close()
+
+	if count {
+		aggrQuery := query.NewAggregationQuery().WithCount("count")
+		aggrRes, err := aggrQuery.Get(context.Background())
+
+		if err != nil {
+			return cli.NewExitError(fmt.Sprintf("Failed to retrieve aggregation. \n%v", err), 84)
+		}
+
+		count := aggrRes["count"].(*firestorepb.Value).GetIntegerValue()
+
+		displayItemWriter.WriteCounter(collectionPathOrId, count)
+
+		return nil
+	}
 
 	documentIterator := query.Documents(context.Background())
 
